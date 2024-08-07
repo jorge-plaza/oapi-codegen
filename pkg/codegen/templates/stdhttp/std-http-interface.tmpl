@@ -1,7 +1,28 @@
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-{{range .}}{{.SummaryAsComment }}
-// ({{.Method}} {{.Path}})
-{{.OperationId}}(w http.ResponseWriter, r *http.Request{{genParamArgs .PathParams}}{{if .RequiresParamObject}}, params {{.OperationId}}Params{{end}})
+{{ if not opts.OutputOptions.GroupByTag }}
+    {{range .}}
+        {{.SummaryAsComment }}
+        // ({{.Method}} {{.Path}})
+        {{.OperationId}}(w http.ResponseWriter, r *http.Request{{genParamArgs .PathParams}}{{if .RequiresParamObject}}, params {{.OperationId}}Params{{end}})
+    {{end}}
+    }
+{{ else }}
+    {{/* Grouped inteterfaces block the groupOperations function is used to group by tag a slice of Operations */}}
+    {{range $tag, $ops := groupOperations .}}
+        {{$tag}}API
+    {{end}}
+    }
+
+    {{/* Generate the individual API interfaces */}}
+    {{range $tag, $ops := groupOperations .}}
+        // {{$tag}}API handlers for tag {{$tag}}
+        type {{$tag}}API interface {
+        {{range $op := $ops}}{{$op.SummaryAsComment }}
+        // ({{$op.Method}} {{$op.Path}})
+        {{$op.OperationId}}(w http.ResponseWriter, r *http.Request{{genParamArgs $op.PathParams}}{{if $op.RequiresParamObject}}, params {{$op.OperationId}}Params{{end}})
+        {{end}}
+        }
+    {{ end }}
 {{end}}
-}
+{{/* Close either the ServerInterface bracket or the last individual API interface bracket*/}}

@@ -184,70 +184,29 @@ func Generate(spec *openapi3.T, opts Configuration) (string, error) {
 		MergeImports(xGoTypeImports, imprts)
 	}
 
-	var irisServerOut string
-	if opts.Generate.IrisServer {
-		irisServerOut, err = GenerateIrisServer(t, ops)
-		if err != nil {
-			return "", fmt.Errorf("error generating Go handlers for Paths: %w", err)
-		}
+	var serverGenerator ServerGenerator
+	switch {
+	case opts.Generate.IrisServer:
+		serverGenerator = NewIrisGenerator()
+	case opts.Generate.EchoServer:
+		serverGenerator = NewEchoGenerator()
+	case opts.Generate.ChiServer:
+		serverGenerator = NewChiGenerator()
+	case opts.Generate.FiberServer:
+		serverGenerator = NewFiberGenerator()
+	case opts.Generate.GinServer:
+		serverGenerator = NewGinGenerator()
+	case opts.Generate.GorillaServer:
+		serverGenerator = NewGorillaGenerator()
+	case opts.Generate.StdHTTPServer:
+		serverGenerator = NewStdHttp()
+	default:
+		serverGenerator = NoOpGenerator{}
 	}
+	generatedServerOut, err := serverGenerator.Generate(t, ops)
 
-	var echoServerOut string
-	if opts.Generate.EchoServer {
-		echoServerOut, err = GenerateEchoServer(t, ops)
-		if err != nil {
-			return "", fmt.Errorf("error generating Go handlers for Paths: %w", err)
-		}
-	}
-
-	var chiServerOut string
-	if opts.Generate.ChiServer {
-		chiServerOut, err = GenerateChiServer(t, ops)
-		if err != nil {
-			return "", fmt.Errorf("error generating Go handlers for Paths: %w", err)
-		}
-	}
-
-	var fiberServerOut string
-	if opts.Generate.FiberServer {
-		fiberServerOut, err = GenerateFiberServer(t, ops)
-		if err != nil {
-			return "", fmt.Errorf("error generating Go handlers for Paths: %w", err)
-		}
-	}
-
-	var ginServerOut string
-	if opts.Generate.GinServer {
-		if opts.OutputOptions.GroupByTag {
-			groupedOps := OperationsGroupedByTags(ops)
-			ginServerOut, err = GenerateGinServerByTags(t, groupedOps)
-		} else {
-			ginServerOut, err = GenerateGinServer(t, ops)
-		}
-		if err != nil {
-			return "", fmt.Errorf("error generating Go handlers for Paths: %w", err)
-		}
-	}
-
-	var gorillaServerOut string
-	if opts.Generate.GorillaServer {
-		gorillaServerOut, err = GenerateGorillaServer(t, ops)
-		if err != nil {
-			return "", fmt.Errorf("error generating Go handlers for Paths: %w", err)
-		}
-	}
-
-	var stdHTTPServerOut string
-	if opts.Generate.StdHTTPServer {
-		if opts.OutputOptions.GroupByTag {
-			groupedOps := OperationsGroupedByTags(ops)
-			stdHTTPServerOut, err = GenerateStdHTTPServerByTags(t, groupedOps)
-		} else {
-			stdHTTPServerOut, err = GenerateStdHTTPServer(t, ops)
-		}
-		if err != nil {
-			return "", fmt.Errorf("error generating Go handlers for Paths: %w", err)
-		}
+	if err != nil {
+		return "", fmt.Errorf("error generating Go handlers for Paths: %w", err)
 	}
 
 	var strictServerOut string
@@ -334,54 +293,9 @@ func Generate(spec *openapi3.T, opts Configuration) (string, error) {
 		}
 	}
 
-	if opts.Generate.IrisServer {
-		_, err = w.WriteString(irisServerOut)
-		if err != nil {
-			return "", fmt.Errorf("error writing server path handlers: %w", err)
-		}
-
-	}
-
-	if opts.Generate.EchoServer {
-		_, err = w.WriteString(echoServerOut)
-		if err != nil {
-			return "", fmt.Errorf("error writing server path handlers: %w", err)
-		}
-	}
-
-	if opts.Generate.ChiServer {
-		_, err = w.WriteString(chiServerOut)
-		if err != nil {
-			return "", fmt.Errorf("error writing server path handlers: %w", err)
-		}
-	}
-
-	if opts.Generate.FiberServer {
-		_, err = w.WriteString(fiberServerOut)
-		if err != nil {
-			return "", fmt.Errorf("error writing server path handlers: %w", err)
-		}
-	}
-
-	if opts.Generate.GinServer {
-		_, err = w.WriteString(ginServerOut)
-		if err != nil {
-			return "", fmt.Errorf("error writing server path handlers: %w", err)
-		}
-	}
-
-	if opts.Generate.GorillaServer {
-		_, err = w.WriteString(gorillaServerOut)
-		if err != nil {
-			return "", fmt.Errorf("error writing server path handlers: %w", err)
-		}
-	}
-
-	if opts.Generate.StdHTTPServer {
-		_, err = w.WriteString(stdHTTPServerOut)
-		if err != nil {
-			return "", fmt.Errorf("error writing server path handlers: %w", err)
-		}
+	_, err = w.WriteString(generatedServerOut)
+	if err != nil {
+		return "", fmt.Errorf("error writing server path handlers: %w", err)
 	}
 
 	if opts.Generate.Strict {
