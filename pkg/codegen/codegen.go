@@ -20,6 +20,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"github.com/jorge-plaza/oapi-codegen/v2/pkg/util"
 	"io"
 	"io/fs"
 	"net/http"
@@ -32,8 +33,6 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"golang.org/x/tools/imports"
-
-	"github.com/oapi-codegen/oapi-codegen/v2/pkg/util"
 )
 
 // Embed the templates directory
