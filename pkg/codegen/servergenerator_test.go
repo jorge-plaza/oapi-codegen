@@ -56,6 +56,26 @@ func TestBaseGenerator_Generate(t *testing.T) {
 				},
 			}, want: expectedStdHttpGrouped, wantErr: assert.NoError,
 		},
+		{
+			name:      "GinGenerator Grouped Tags",
+			generator: NewGinGenerator(),
+			args: args{
+				conf: Configuration{
+					Generate:      GenerateOptions{StdHTTPServer: true},
+					OutputOptions: OutputOptions{GroupByTag: true},
+				},
+			}, want: expectedGinGrouped, wantErr: assert.NoError,
+		},
+		{
+			name:      "GinGenerator Grouped Tags check interface",
+			generator: NewGinGenerator(),
+			args: args{
+				conf: Configuration{
+					Generate:      GenerateOptions{StdHTTPServer: true},
+					OutputOptions: OutputOptions{GroupByTag: true},
+				},
+			}, want: expectedGinGroupedInterface, wantErr: assert.NoError,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -97,3 +117,16 @@ type ServerInterface interface {
 	CatAPI
 }
 `
+
+const expectedGinGrouped = `
+type ServerInterface interface {
+	CatAPI
+}
+`
+const expectedGinGroupedInterface = `
+// CatAPI handlers for tag Cat
+type CatAPI interface {
+	// Get cat status
+	// (GET /cat)
+	GetCatStatus(c *gin.Context)
+}`
