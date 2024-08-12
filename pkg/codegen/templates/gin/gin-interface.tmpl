@@ -1,13 +1,5 @@
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-{{range .}}{{.SummaryAsComment }}
-// ({{.Method}} {{.Path}})
-{{.OperationId}}(c *gin.Context{{genParamArgs .PathParams}}{{if .RequiresParamObject}}, params {{.OperationId}}Params{{end}})
-{{end}}
-}
-
-// ServerInterface represents all server handlers.
-type ServerInterface interface {
 {{ if not opts.OutputOptions.GroupByTag }}
     {{range .}}
         {{.SummaryAsComment }}
@@ -33,4 +25,3 @@ type ServerInterface interface {
         }
     {{ end }}
 {{end}}
-{{/* Close either the ServerInterface bracket or the last individual API interface bracket*/}}
